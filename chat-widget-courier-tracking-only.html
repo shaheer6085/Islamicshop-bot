@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IslamicShop.in - Chat Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Chat Widget Button */
+        .chat-widget-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .chat-widget-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .chat-icon {
+            font-size: 28px;
+            color: white;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4444;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        /* Chat Container */
+        .chat-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+
+        .chat-container.active {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #27ae60;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            background: #27ae60;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .chat-header-text h3 {
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .chat-header-text p {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .chat-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .chat-close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f5f5f5;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            margin: 0 8px;
+            flex-shrink: 0;
+        }
+
+        .message.bot .message-avatar {
+            background: #27ae60;
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Horizontal Product Scroll Container */
+        .product-scroll-container {
+            overflow-x: auto;
+            overflow-y: hidden;
+            margin: 10px 0;
+            padding: 5px 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #667eea #f0f0f0;
+        }
+
+        .product-scroll-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .product-scroll-container::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        .product-scroll-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        .product-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* Horizontal Product Grid */
+        .product-grid {
+            display: flex;
+            gap: 12px;
+            padding: 5px 0;
+            min-width: min-content;
+        }
+
+        .product-item {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            min-width: 140px;
+            max-width: 140px;
+            flex-shrink: 0;
+        }
+
+        .product-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .product-item img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            loading: lazy;
+            background: #f0f0f0;
+        }
+
+        .product-item-info {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .product-item-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 12px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 32px;
+            margin-bottom: 4px;
+        }
+
+        .product-item-price {
+            font-weight: 700;
+            color: #27ae60;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .scroll-hint {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .category-item {
+            padding: 10px 12px;
+            margin: 6px 0;
+            background: #e8f5e9;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid #27ae60;
+            font-size: 13px;
+        }
+
+        .category-item:hover {
+            background: #c8e6c9;
+            transform: translateX(3px);
+        }
+
+        .tracking-options {
+            margin: 10px 0;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 15px;
+            width: fit-content;
+            border: 1px solid #e0e0e0;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .typing-indicator span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #999;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .chat-input-area {
+            padding: 12px 15px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #667eea;
+            color: #667eea;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+
+        .quick-action-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendButton {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        #sendButton:hover {
+            transform: translateY(-2px);
+        }
+
+        #sendButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 480px) {
+            .chat-container {
+                width: calc(100vw - 40px);
+                height: 500px;
+                bottom: 80px;
+            }
+
+            .product-item {
+                min-width: 120px;
+                max-width: 120px;
+            }
+
+            .product-item img {
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Your website content goes here -->
+    <h1 style="padding: 20px;">IslamicShop.in Website</h1>
+
+    <!-- Chat Widget Button -->
+    <div class="chat-widget-button" id="chatWidgetButton" onclick="toggleChat()">
+        <div class="chat-icon">💬</div>
+        <div class="notification-badge">1</div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-header-avatar">🤖</div>
+                <div class="chat-header-text">
+                    <h3>IslamicShop Assistant</h3>
+                    <p>● Online - We reply instantly</p>
+                </div>
+            </div>
+            <button class="chat-close-btn" onclick="toggleChat()">×</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    Assalamu Alaikum! 👋<br><br>
+                    Welcome to IslamicShop.in! How can I help you today?<br><br>
+                    <strong>I can assist with:</strong><br>
+                    • 👔 Men's products<br>
+                    • 🎯 Recommendations<br>
+                    • 📦 Order tracking
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="sendQuickMessage('Show thobes')">🕌 Thobes</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Prayer caps')">🧢 Caps</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('casual wear')">👕 Casual</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('ethnic wear')">👘 Ethnic</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('leather products')">👜 Leather</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('sports wear')">⚽ Sports</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Track order')">📦 Track</button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Show couriers')">🚚 Couriers</button>
+            </div>
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                <button id="sendButton" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <script>
+        // Complete Product Catalog with Links
+        const productCatalog = {
+            men: {
+                name: "Men's Collection",
+                categories: {
+                    traditionalWear: {
+                        name: "Traditional Wear",
+                        items: [
+                            {
+                                name: "Thobes",
+                                image: "https://islamicshop.in/media/.renditions/wysiwyg/Thobe.jpg",
+                                link: "https://islamicshop.in/men/thobes-men-muslim-clothing",
+                                price: "₹1,299"
+                            },
+                            {
+                                name: "Al Shaika Thobes",
+                                image: "https://islamicshop.in/media/catalog/product/cache/84137d8f4a707ae0e1dacf92b29ac5dc/w/h/whatsapp_image_2019-04-12_at_12.04.45_pm_2nd.jpeg",
+                                link: "https://islamicshop.in/men/al-shaika-arabian-thobes",
+                                price: "₹1,599"
+                            },
+                            {
+                                name: "Galabiyyas",
+                                image: "https://islamicshop.in/media/catalog/product/cache/84137d8f4a707ae0e1dacf92b29ac5dc/g/m/gm-036-1_2nd.jpg",
+                                link: "https://islamicshop.in/men/men-galabbiyas-muslim-clothing",
+                                price: "₹1,199"
+                            },
+                            {
+                                name: "Kurta",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/v/a/vasmkwh000_2nd.jpg",
+                                link: "https://islamicshop.in/men/kurta",
+                                price: "₹899"
+                            },
+                            {
+                                name: "Kurta Pajama",
+                                image: "https://islamicshop.in/media/catalog/product/cache/84137d8f4a707ae0e1dacf92b29ac5dc/v/a/vasmkbl006nprg_1_2nd.jpg",
+                                link: "https://islamicshop.in/men/kurta-pajama",
+                                price: "₹1,099"
+                            },
+                            {
+                                name: "Kurta Saya",
+                                image: "https://islamicshop.in/media/catalog/product/cache/84137d8f4a707ae0e1dacf92b29ac5dc/1/7/177_2nd.jpg",
+                                link: "https://islamicshop.in/men/kurta-saya-material",
+                                price: "₹999"
+                            }
+                        ],
+                        categoryLink: "https://islamicshop.in/men",
+                    },
+                    prayerCaps: {
+                        name: "Prayer Caps",
+                        items: [
+                            {
+                                name: "Kufi Cap",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/0/4/04_9_25_2nd.jpg",
+                                link: "https://islamicshop.in/men/kufi-cap",
+                                price: "₹299"
+                            },
+                            {
+                                name: "Turkish Prayer Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/r/e/red_cap_2_1_1_1_2nd.jpg",
+                                link: "https://islamicshop.in/men/turkish-prayer-caps",
+                                price: "₹349"
+                            },
+                            {
+                                name: "Panj Kali Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/7/_/7_5_3_2nd.jpg",
+                                link: "https://islamicshop.in/men/panj-kali-cap",
+                                price: "₹199"
+                            },
+                            {
+                                name: "Rimless Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/g/r/grey_rimpless_prayer_cap_1_2nd.jpg",
+                                link: "https://islamicshop.in/men/rimless-caps",
+                                price: "₹249"
+                            },
+                            {
+                                name: "Karakul Cap",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/b/l/black_far_1_2nd.jpg",
+                                link: "https://islamicshop.in/men/karakul-prayer-cap",
+                                price: "₹399"
+                            },
+                            {
+                                name:"Mosque Cap (Plastic)",
+                                image:"https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/t/p/tp2_2nd.jpg",
+                                link:"https://islamicshop.in/men/mosque-prayer-caps",
+                                price: "₹99"
+                            }
+                        ],
+                        categoryLink: "https://islamicshop.in/men/prayer-caps",
+                    },
+                    casualWear: {
+                        name: "Casual Wear",
+                        items: [
+                            {
+                                name: "Islamic T-shirts",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/m/e/melange-grey-3-300x300_2_1_1_1_1_1_2_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1_2nd.jpg",
+                                link: "https://islamicshop.in/men/islamic-tshirts-men",
+                                price: "₹520"
+                            },
+                            {
+                                name: "Men Hoodies",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/b/l/blessed-olive_2nd.jpg",
+                                link: "https://islamicshop.in/men/islamic-hoodies-for-men",
+                                price: "₹999"
+                            },
+                            {
+                                name: "Men Joggers",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/g/e/gery-600x750_2nd.jpg",
+                                link: "https://islamicshop.in/men/men-joggers",
+                                price: "₹799"
+                            },
+                            {
+                                name: "Full Sleeve T-shirts",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/2/1/21244612_1922457424438086_1294842161_n_2nd.jpg",
+                                link: "https://islamicshop.in/men/islamic-full-sleeve-t-shirt-men",
+                                price: "₹2320"
+                            },
+                            {
+                                name: "Half Sleeve T-shirts",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/a/k/akhlaq-24-002-b_2nd.jpg",
+                                link: "https://islamicshop.in/men/islamic-half-sleeve-t-shirt-men",
+                                price: "₹449"
+                            }
+
+                        ],
+                        categoryLink: "https://islamicshop.in/men",
+                    },
+                    leatherProducts: {
+                        name: "Leather Products",
+                        items: [
+                            {
+                                name: "Leather Wallets",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/0/0/001_10_2nd.jpg",
+                                link: "https://islamicshop.in/men/leather-wallet",
+                                price: "₹599"
+                            },
+                            {
+                                name: "Leather Belts",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/l/e/leather_belt_black_2nd.jpg",
+                                link: "https://islamicshop.in/men/leather-belt",
+                                price: "₹499"
+                            },
+                            {
+                                name: "Leather Shoes",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/b/r/brown_01__2nd.jpg",
+                                link: "https://islamicshop.in/men/leather-shoes",
+                                price: "₹1,299"
+                            },
+                            {
+                                name: "Leather Ties",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/d/a/dark_brown_leather_tie_01_2nd.jpg",
+                                link: "https://islamicshop.in/men/leather-ties",
+                                price: "₹399"
+                            },
+                            {
+                                name: "Leather Mausa (Socks)",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/b/r/brown_leather_socks_mauza_2nd.jpg",
+                                link: "https://islamicshop.in/men/leather-socks",
+                                price: "₹699"
+                            },
+                            {
+                                name: "Leather Gloves",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/b/l/black_leather_gloves_2nd.jpg",
+                                link: "https://islamicshop.in/men/leather-gloves",
+                                price: "₹799"
+                            },
+                            {
+                                name: "Leather Jacket",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/0/5/05x2900_2nd.jpg",
+                                link: "https://islamicshop.in/men/leather-jackets",
+                                price: "₹2,999"
+                            },
+                        ],
+                        categoryLink: "https://islamicshop.in/men",
+                    },
+                    ethnicWear: {
+                        name: "Ethnic Wear",
+                        items: [
+                            {
+                                name: "Sherwani",
+                                image: "https://images.unsplash.com/photo-1605510213441-c79f7c6e0963?w=200&h=200&fit=crop&q=75",
+                                link: "https://islamicshop.in/men/sherwani",
+                                price: "₹2,499"
+                            },
+                            {
+                                name: "Pathani Suit",
+                                image: "https://images.unsplash.com/photo-1618932260643-eee4a2f652a6?w=200&h=200&fit=crop&q=75",
+                                link: "https://islamicshop.in/men/pathani-suit",
+                                price: "₹1,499"
+                            },
+                            {
+                                name: "Bisht",
+                                image: "https://images.unsplash.com/photo-1490578474895-699cd4e2cf59?w=200&h=200&fit=crop&q=75",
+                                link: "https://islamicshop.in/men/bisht-for-men-islamic-clothing",
+                                price: "₹1,799"
+                            },
+                            {
+                                name: "Nehru Jacket",
+                                image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=200&h=200&fit=crop&q=75",
+                                link: "https://islamicshop.in/men/nehru-jacket",
+                                price: "₹1,199"
+                            }
+                        ],
+                        categoryLink: "https://islamicshop.in/men",
+                    },
+                    sportsWear: {
+                        name: "Sports Wear",
+                        items: [
+                            {
+                                name: "Bolt Sports Wear",
+                                image: "https://images.unsplash.com/photo-1556906781-9a412961c28c?w=200&h=200&fit=crop&q=75",
+                                link: "https://islamicshop.in/men/bolt-sports-wear",
+                                price: "₹699"
+                            },
+                            {
+                                name: "Raptor Sports Wear",
+                                image: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=200&h=200&fit=crop&q=75",
+                                link: "https://islamicshop.in/men/raptor-sports-wear-muslim-clothing",
+                                price: "₹799"
+                            }
+                        ],
+                        categoryLink: "https://islamicshop.in/men",
+                    },
+                    traditionalcap:{
+                        name: "Traditional Caps",
+                        items: [
+                    {
+                                name: "Bohra Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/0/2/02_32_3_2nd.jpg",
+                                link: "https://islamicshop.in/men/bohra-caps",
+                                price: "₹799"
+                    },
+                    {
+                                name: "Indonesian Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/b/l/blue_cap01_3_2nd.jpg",
+                                link: "https://islamicshop.in/men/indonesian-prayer-caps",
+                                price: "₹650"
+                    },
+                    {
+                                name: "Omani Prayer Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/84137d8f4a707ae0e1dacf92b29ac5dc/c/r/creambrown1_2nd.jpg",
+                                link: "https://islamicshop.in/men/omani-prayer-caps",
+                                price: "₹599"
+                    },
+                    {
+                                name: "Pakistani Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/m/u/multicolor_cap_05_1_2nd.jpg",
+                                link: "https://islamicshop.in/men/pakistani-prayer-caps",
+                                price: "₹550"
+                    },
+                    {
+                                name: "Malaysian Prayer Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/b/l/blue_cap02_2nd.jpg",
+                                link: "https://islamicshop.in/men/malaysian-prayer-caps",
+                                price: "₹700"
+                                },
+                    {
+                                name: "Kashmiri / Pakol Cap",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/k/a/kashmiri_browne_2nd.jpg",
+                                link: "https://islamicshop.in/men/kashmiri-pakol-cap",
+                                price: "₹899"
+                    },
+                    {
+                                name: "Paghri & Fetas",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/3/_/3_25_3_2nd.jpg",
+                                link: "https://islamicshop.in/men/paghri-fetas",
+                                price: "₹1,200"
+                    },
+                    {
+                                name: "Rampuri Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/w/h/white_14_2nd.jpg",
+                                link: "https://islamicshop.in/men/rampuri-prayer-cap",
+                                price: "₹750"
+                    },
+                    {
+                                name: "Lucknowi Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/1/_/1_32_2_2_2nd.jpg",
+                                link: "https://islamicshop.in/men/lucknowi-prayer-cap",
+                                price: "₹850"
+                    },
+                    {
+                                name: "Ertugrul Caps",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/1/5/15_46_2nd.jpg",
+                                link: "https://islamicshop.in/men/ertugrul-caps",
+                                price: "₹950"
+                    },
+                    {
+                                name: "Sufi Cap",
+                                image: "https://islamicshop.in/media/catalog/product/cache/b7a5ac963a3185419d9c709a86ae33e5/1/1/11_brown_printed_cap_2nd.jpeg",
+                                link: "https://islamicshop.in/men/sufi-cap",
+                                price: "₹650"
+                    }
+                ]
+            }
+                    }
+                }
+            };
+
+        const storeInfo = {
+            contact: "https://islamicshop.in/contact",
+            sellOnline: "https://islamicshop.in/sell-online",
+            wholesale: "Wholesale options available - Contact us for details",
+            shipping: "We ship worldwide with multiple currency options (INR, USD, EUR, CAD, AUD, SGD, MYR)",
+            couriers: {
+                bluedart: {
+                    name: "Blue Dart",
+                    icon: "🔵",
+                    trackingUrl: "https://bluedart.com/"
+                },
+                delhivery: {
+                    name: "Delhivery",
+                    icon: "📦",
+                    trackingUrl: "https://www.delhivery.com/tracking"
+                },
+                ekart: {
+                    name: "Ekart Logistics",
+                    icon: "🚚",
+                    trackingUrl: "https://ekartlogistics.com/ekartlogistics-web"
+                },
+                tpc: {
+                    name: "The Professional Couriers",
+                    icon: "📮",
+                    trackingUrl: "https://www.tpcindia.com/"
+                },
+                indiapost: {
+                    name: "India Post",
+                    icon: "📬",
+                    trackingUrl: "https://www.indiapost.gov.in/"
+                },
+                dtdc: {
+                    name: "DTDC",
+                    icon: "📦",
+                    trackingUrl: "https://www.dtdc.com/in/"
+                },
+                xpressbees: {
+                    name: "Xpressbees",
+                    icon: "⚡",
+                    trackingUrl: "https://www.xpressbees.com/shipment/tracking"
+                },
+                dhl: {
+                    name: "DHL",
+                    icon: "✈️",
+                    trackingUrl: "https://www.dhl.com/in-en/home/tracking.html"
+                },
+                fedex: {
+                    name: "FedEx",
+                    icon: "📫",
+                    trackingUrl: "https://www.fedex.com/en-in/tracking.html"
+                },
+                aramex: {
+                    name: "Aramex",
+                    icon: "🌍",
+                    trackingUrl: "https://www.aramex.com/us/en/track/shipments"
+                },
+                ups: {
+                    name: "UPS",
+                    icon: "📦",
+                    trackingUrl: "https://www.ups.com/track?loc=en_IN&requester=ST/"
+                }
+            }
+        };
+
+        function toggleChat() {
+            const container = document.getElementById('chatContainer');
+            const button = document.getElementById('chatWidgetButton');
+            const badge = button.querySelector('.notification-badge');
+            
+            container.classList.toggle('active');
+            
+            if (container.classList.contains('active')) {
+                badge.style.display = 'none';
+                document.getElementById('userInput').focus();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+            
+            document.getElementById('sendButton').disabled = true;
+            showTypingIndicator();
+
+            setTimeout(async () => {
+                try {
+                    const response = await getAIResponse(message);
+                    hideTypingIndicator();
+                    addMessage(response, 'bot');
+                } catch (error) {
+                    hideTypingIndicator();
+                    addMessage("Sorry, I'm having trouble right now. Please try again!", 'bot');
+                } finally {
+                    document.getElementById('sendButton').disabled = false;
+                }
+            }, 800);
+        }
+
+        async function getAIResponse(userMessage) {
+            const lowercaseMsg = userMessage.toLowerCase();
+
+            // Handle product queries
+            if (lowercaseMsg.includes('thobe') || lowercaseMsg.includes('traditional wear')) {
+                return formatProductGrid('traditionalWear', 'men');
+            }
+            if (lowercaseMsg.includes('prayer cap')) {
+                return formatProductGrid('prayerCaps', 'men');
+            }
+            if (lowercaseMsg.includes('traditional cap')) {
+                return formatProductGrid('traditionalcap', 'men');
+            }
+            if (lowercaseMsg.includes('casual') || lowercaseMsg.includes('tshirt') || lowercaseMsg.includes('hoodie')) {
+                return formatProductGrid('casualWear', 'men');
+            }
+            if (lowercaseMsg.includes('leather') || lowercaseMsg.includes('wallet') || lowercaseMsg.includes('belt')) {
+                return formatProductGrid('leatherProducts', 'men');
+            }
+            if (lowercaseMsg.includes('sherwani') || lowercaseMsg.includes('ethnic') || lowercaseMsg.includes('pathani')) {
+                return formatProductGrid('ethnicWear', 'men');
+            }
+            if (lowercaseMsg.includes('sport') || lowercaseMsg.includes('athletic')) {
+                return formatProductGrid('sportsWear', 'men');
+            }
+            if (lowercaseMsg.includes('men')) {
+                return formatAllMensCategories();
+            }
+
+            // Track order with courier options only
+            if (lowercaseMsg.includes('track') || lowercaseMsg.includes('order') || lowercaseMsg.includes('courier') || lowercaseMsg.includes('delivery')) {
+                return `📦 <strong>Track Your Order</strong><br><br>
+                <div class="tracking-options">
+                    <strong>Select your courier partner to track:</strong><br>
+                    <small style="color: #666;">Click on the courier that delivered your order</small><br><br>
+                    ${formatCourierLinks()}
+                </div>`;
+            }
+
+            // Show couriers only
+            if (lowercaseMsg.includes('show couriers') || lowercaseMsg.includes('courier list')) {
+                return `🚚 <strong>Courier Partners</strong><br><br>
+                <div style="margin: 10px 0;">
+                    <small style="color: #666;">Click on your courier to track directly:</small><br><br>
+                    ${formatCourierLinks()}
+                </div>`;
+            }
+
+            // Contact
+            if (lowercaseMsg.includes('contact') || lowercaseMsg.includes('help')) {
+                return `📞 <strong>Contact Us</strong><br><br>
+                <a href="${storeInfo.contact}" target="_blank" style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">Contact Support</a>`;
+            }
+
+            // Wholesale
+            if (lowercaseMsg.includes('wholesale') || lowercaseMsg.includes('bulk')) {
+                return `💼 <strong>Wholesale Opportunities</strong><br><br>${storeInfo.wholesale}<br><br>
+                <a href="${storeInfo.sellOnline}" target="_blank" style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 13px;">Learn More</a>`;
+            }
+
+            // Shipping
+            if (lowercaseMsg.includes('ship') || lowercaseMsg.includes('deliver')) {
+                return `🌍 <strong>Shipping Information</strong><br><br>${storeInfo.shipping}`;
+            }
+
+            // Default
+            return `I can help you with:<br><br>
+            • "Show thobes"<br>
+            • "Prayer caps"<br>
+            • "Casual wear"<br>
+            • "Track my order"<br><br>
+            What would you like?`;
+        }
+
+        function formatProductGrid(category, collection) {
+            const cat = productCatalog[collection].categories[category];
+            let response = `<strong>🛍️ ${cat.name}</strong><br><br>`;
+            
+            response += '<div class="product-scroll-container">';
+            response += '<div class="product-grid">';
+            cat.items.forEach(item => {
+                response += `
+                    <a href="${item.link}" target="_blank" class="product-item">
+                        <img src="${item.image}" alt="${item.name}" loading="lazy">
+                        <div class="product-item-info">
+                            <div class="product-item-name">${item.name}</div>
+                            <div class="product-item-price">${item.price}</div>
+                        </div>
+                    </a>
+                `;
+            });
+            response += '</div>';
+            response += '</div>';
+            response += `<div class="scroll-hint">← Swipe to see more →</div>`;
+            return response;
+        }
+
+        function formatAllMensCategories() {
+            let response = `<strong>👔 Men's Collection</strong><br><br>`;
+            
+            Object.values(productCatalog.men.categories).forEach(cat => {
+                response += `<div class="category-item" onclick="sendQuickMessage('Show me ${cat.name}')">
+                    <strong>${cat.name}</strong>
+                </div>`;
+            });
+            return response;
+        }
+
+        function formatCourierLinks() {
+            let response = '<div class="product-scroll-container" style="margin: 10px 0;">';
+            response += '<div style="display: flex; gap: 10px; padding: 5px 0;">';
+            
+            Object.values(storeInfo.couriers).forEach(courier => {
+                response += `
+                    <a href="${courier.trackingUrl}" target="_blank" 
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px 16px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; text-decoration: none; color: #333; font-size: 11px; font-weight: 600; transition: all 0.3s; min-width: 100px; flex-shrink: 0; text-align: center;"
+                        onmouseover="this.style.borderColor='#667eea'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(102, 126, 234, 0.2)'"
+                        onmouseout="this.style.borderColor='#e0e0e0'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        <span style="font-size: 24px;">${courier.icon}</span>
+                        <span style="line-height: 1.2;">${courier.name}</span>
+                    </a>
+                `;
+            });
+            
+            response += '</div></div>';
+            response += '<div class="scroll-hint">← Swipe to see all couriers →</div>';
+            return response;
+        }
+
+        function addMessage(text, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = sender === 'user' ? '👤' : '🤖';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.innerHTML = text;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            messagesDiv.appendChild(messageDiv);
+            
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.classList.add('active');
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.appendChild(indicator);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.classList.remove('active');
+        }
+
+        function sendQuickMessage(message) {
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
